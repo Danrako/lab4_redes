@@ -1,0 +1,5 @@
+---------------------
+Nombre archivo arch.txt
+Tamaño del archivo 12828
+Conectado con el usuario: ('192.168.56.1', 62003)
+El tiempo de transferencia es2.7360777854919434
