@@ -2,6 +2,7 @@
 
 # Importar la libreria del socket
 import socket
+import threading
 import hashlib
 import os
 import time
@@ -23,7 +24,6 @@ def main():
     # La instrucción s.bindhost, port toma solo un argumento. Vincule el socket al host y al número de puerto.
     # La sentencia s.listen(2) escucha la conexión y espera al cliente.
     s.bind((host, port)) #bind server
-    s.listen(2)
 
     # El ciclo while mantiene vivo el programa del servidor y no detiene la ejecución del código. 
     # Puede establecer un límite de conexión para el ciclo while; 
@@ -40,63 +40,90 @@ def main():
 
     concurrent_clients = int(input("Escriba el número de conecciones concurrentes que desea tener: "))
 
+    s.listen(concurrent_clients+1)
+
     print("Server listening on port ", PORT)
 
-    # Mirar como cerrar servidor
-    while True:
-        # La instrucción conn, addr = s.accept() devuelve dos valores: conn y addr.
-       
-        conn, addr = s.accept()
-        t1 = time.time()
-        print(addr, "Usuario conectado")
-        if selected_file == 1:
-            path = "data/100MB.txt"
-        elif selected_file == 2:
-            path = "data/250MB.txt"
-        else:
-            print("No se pudo leer el archivo")
-            path = open("/")
-        
-        # Se lee el archivo
-        # breakpoint()
-        file = open(path, "r")
-        data = file.read()
-        
-        # Se saca la codificacion de hash del archivo
-        data_encoded = data.encode(FORMAT)
-        data_hash = hashlib.md5(data_encoded).hexdigest()
-        file_size = os.path.getsize(path)
-        sf = str(file_size)
-        conn.send(sf.encode(FORMAT))
-        conn.send(data_hash.encode(FORMAT))
-        
-        while True:
-            file_content = file.read(SIZE)
-            send_bytes = 0
-            packets = 0
-            while file_content:
-                conn.send(file_content)
-                send_bytes += len(file_content)
-                file_content = file.read(SIZE)
-                packets += 1
-            break
-        
-        # La función conn.send() envía el mensaje al cliente. Finalmente, conn.close() cierra el socket.
-        conn.send(b"Mensaje enviado")
-        conn.close()
-        t2 = time.time()
+    count = 0
+    barrier = threading.Barrier(concurrent_clients)
 
-        date = datetime.now()
-        date_time = date.strftime("%m-%d-%Y-%H-%M-%S")
-        text = "---------------------\n"
-        text += "Nombre archivo: " + path + "\n"
-        text += "Tamaño del archivo: " + str(file_size) + " Bytes"+"\n"
-        text += "Conectado con el cliente: "+str(addr) + "\n"
-        text += "El tiempo de transferencia es: " + str(t2-t1) + " ms""\n"
-        print(text)
-        with open('logs/'+date_time+"-log.txt", 'w') as f:
-            f.write(text)
-    
+    while True:
+
+        conn, addr = s.accept()
+
+        count += 1
+        print("Accepted {} connections so far".format(count))
+
+        thread = ClientThread(count, conn, addr, selected_file, barrier)
+
+        thread.start()
+
+
+def on_new_client(conn, addr, selected_file, barrier):
+    barrier.wait()
+    t1 = time.time()
+    print("Enviando archivo al usuario", addr)
+    if selected_file == 1:
+        path = "data/100MB.txt"
+    elif selected_file == 2:
+        path = "data/250MB.txt"
+    else:
+        print("No se pudo leer el archivo")
+        path = open("/")
+
+    # Se lee el archivo
+    # breakpoint()
+    file = open(path, "r")
+    data = file.read()
+
+    # Se saca la codificacion de hash del archivo
+    data_encoded = data.encode(FORMAT)
+    data_hash = hashlib.md5(data_encoded).hexdigest()
+    file_size = os.path.getsize(path)
+    sf = str(file_size)
+    conn.send(sf.encode(FORMAT))
+    conn.send(data_hash.encode(FORMAT))
+
+    while True:
+        file_content = file.read(SIZE)
+        send_bytes = 0
+        packets = 0
+        while file_content:
+            conn.send(file_content)
+            send_bytes += len(file_content)
+            file_content = file.read(SIZE)
+            packets += 1
+        break
+
+    # La función conn.send() envía el mensaje al cliente. Finalmente, conn.close() cierra el socket.
+    conn.send(b"Mensaje enviado")
+    conn.close()
+    t2 = time.time()
+
+    date = datetime.now()
+    date_time = date.strftime("%m-%d-%Y-%H-%M-%S")
+    text = "---------------------\n"
+    text += "Nombre archivo: " + path + "\n"
+    text += "Tamaño del archivo: " + str(file_size) + " Bytes" + "\n"
+    text += "Conectado con el cliente: " + str(addr) + "\n"
+    text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
+    print(text)
+    with open('logs/' + date_time + "-log.txt", 'w') as f:
+        f.write(text)
+
+
+class ClientThread(threading.Thread):
+    def __init__(self, thread_id, conn, addr, selected_file, barrier):
+        threading.Thread.__init__(self)
+        self.thread_ID = thread_id
+        self.conn = conn
+        self.addr = addr
+        self.selected_file = selected_file
+        self.barrier = barrier
+
+    def run(self):
+        on_new_client(self.conn, self.addr, self.selected_file, self.barrier)
+
 
 if __name__ == "__main__":
     
