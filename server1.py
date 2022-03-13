@@ -15,7 +15,7 @@ PORT = 12345
 
 def main():
     # Modificar direccion del servidor
-    host = "192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
+    host = "192.168.28.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
     port = PORT
 
     # socket.AF_INET define la familia de protocolos IPv4. Socket.SOCK_STREAM define la conexión TCP.
@@ -46,8 +46,8 @@ def main():
 
     count = 0
     barrier = threading.Barrier(concurrent_clients)
-
-    while True:
+    clientesFaltantes = concurrent_clients
+    while clientesFaltantes > 0:
 
         conn, addr = s.accept()
 
@@ -57,6 +57,7 @@ def main():
         thread = ClientThread(count, conn, addr, selected_file, barrier)
 
         thread.start()
+        clientesFaltantes = clientesFaltantes-1
 
 
 def on_new_client(conn, addr, selected_file, barrier):
