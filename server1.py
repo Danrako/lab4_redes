@@ -15,7 +15,7 @@ PORT = 12345
 
 def main():
     # Modificar direccion del servidor
-    host = "192.168.28.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
+    host = "192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
     port = PORT
 
     # socket.AF_INET define la familia de protocolos IPv4. Socket.SOCK_STREAM define la conexión TCP.
@@ -40,7 +40,7 @@ def main():
 
     concurrent_clients = int(input("Escriba el número de conecciones concurrentes que desea tener: "))
 
-    s.listen(concurrent_clients+1)
+    s.listen(concurrent_clients)
 
     print("Server listening on port ", PORT)
 
@@ -54,7 +54,7 @@ def main():
         count += 1
         print("Accepted {} connections so far".format(count))
 
-        thread = ClientThread(count, conn, addr, selected_file, barrier)
+        thread = ServerThread(count, conn, addr, selected_file, barrier)
 
         thread.start()
         clientesFaltantes = clientesFaltantes-1
@@ -97,7 +97,6 @@ def on_new_client(conn, addr, selected_file, barrier):
         break
 
     # La función conn.send() envía el mensaje al cliente. Finalmente, conn.close() cierra el socket.
-    conn.send(b"Mensaje enviado")
     conn.close()
     t2 = time.time()
 
@@ -109,11 +108,11 @@ def on_new_client(conn, addr, selected_file, barrier):
     text += "Conectado con el cliente: " + str(addr) + "\n"
     text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
     print(text)
-    with open('logs/' + date_time + "-log.txt", 'w') as f:
+    with open('logs/' + date_time + "-" + str(addr) + "-log.txt", 'w') as f:
         f.write(text)
 
 
-class ClientThread(threading.Thread):
+class ServerThread(threading.Thread):
     def __init__(self, thread_id, conn, addr, selected_file, barrier):
         threading.Thread.__init__(self)
         self.thread_ID = thread_id
