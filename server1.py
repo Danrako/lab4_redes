@@ -81,8 +81,8 @@ def on_new_client(conn, addr, selected_file, barrier):
     data_encoded = data.encode(FORMAT)
     data_hash = hashlib.md5(data_encoded).hexdigest()
     file_size = os.path.getsize(path)
-    sf = str(file_size)
-    conn.send(sf.encode(FORMAT))
+    fz = str(file_size)
+    conn.send(fz.encode(FORMAT))
     conn.send(data_hash.encode(FORMAT))
 
     while True:
@@ -108,7 +108,7 @@ def on_new_client(conn, addr, selected_file, barrier):
     text += "Conectado con el cliente: " + str(addr) + "\n"
     text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
     print(text)
-    with open('logs/' + date_time + "-" + str(addr) + "-log.txt", 'w') as f:
+    with open('logs/' + date_time + "-log.txt", 'a') as f:
         f.write(text)
 
 

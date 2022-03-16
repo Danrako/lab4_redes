@@ -8,6 +8,7 @@ FORMAT = "utf-8"
 PORT = 12345
 # socket.AF_INET define la familia de protocolos IPv4. Socket.SOCK_STREAM define la conexión TCP.
 concurrent_clients = int(input("Escriba el número de clientes que desea tener: "))
+clients = concurrent_clients
 
 
 def on_create_client():
@@ -24,10 +25,15 @@ def on_create_client():
 
     # Numero de los clientes conectados
     i = 0
-    filename = "ArchivosRecibidos/Cliente" + str(i) + "-Prueba-" + str(i)
-    file_size = s.recv(SIZE)
+    filename = "ArchivosRecibidos/Cliente" + str(i) + "-Prueba-" + str(clients)
     hash_data = s.recv(SIZE)
     print(str(i) + "HASH recibido: " + hash_data.decode(FORMAT))
+    file = s.recv(SIZE)
+    print(file)
+    file = s.recv(SIZE)
+    print(file)
+    file = s.recv(SIZE)
+    print(file)
     i += 1
 
     with open(filename, 'w') as f:
