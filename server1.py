@@ -15,7 +15,7 @@ PORT = 12345
 
 def main():
     # Modificar direccion del servidor
-    host = "192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
+    host = "192.168.56.1" #"192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
     port = PORT
 
     # socket.AF_INET define la familia de protocolos IPv4. Socket.SOCK_STREAM define la conexión TCP.
@@ -38,7 +38,7 @@ def main():
     selected_file = int(input("Escriba el id del archivo que quiere enviar, donde 1 es para el archivo de 100MB "
                         "y 2 es para el archivo de 250MB: "))
 
-    concurrent_clients = int(input("Escriba el número de conecciones concurrentes que desea tener: "))
+    concurrent_clients = int(input("Escriba el número de conexiones concurrentes que desea tener: "))
 
     s.listen(concurrent_clients)
 
@@ -65,7 +65,7 @@ def on_new_client(conn, addr, selected_file, barrier):
     t1 = time.time()
     print("Enviando archivo al usuario", addr)
     if selected_file == 1:
-        path = "data/100MB.txt"
+        path = "arch.txt"
     elif selected_file == 2:
         path = "data/250MB.txt"
     else:
@@ -82,21 +82,32 @@ def on_new_client(conn, addr, selected_file, barrier):
     data_hash = hashlib.md5(data_encoded).hexdigest()
     file_size = os.path.getsize(path)
     fz = str(file_size)
+    # Envio cuatro cosas
+    # La función conn.send() envía el mensaje al cliente. 
+    # 1. La informacion del tamaño del archivo
     conn.send(fz.encode(FORMAT))
+    # 2. La informacion del hash
     conn.send(data_hash.encode(FORMAT))
-
+    print("Hash:",data_hash)
+    # 3. El archivo dividido en paquetes de de tamaño SIZE
+    send_bytes = 0
+    packets = 0
     while True:
+        file = open(path, "rb")
         file_content = file.read(SIZE)
-        send_bytes = 0
-        packets = 0
         while file_content:
             conn.send(file_content)
             send_bytes += len(file_content)
             file_content = file.read(SIZE)
             packets += 1
         break
+    print("Archivo enviado correctamente")
+    # 4. Un mensaje de confirmación de que termino de enviar correctamente
+    conn.send(b"Termino:200")
 
-    # La función conn.send() envía el mensaje al cliente. Finalmente, conn.close() cierra el socket.
+    # Recibo un mensaje de confirmacion de que llego el archivo completo y correctamente
+    recibido = conn.recv(SIZE)
+    # Finalmente, conn.close() cierra el socket.
     conn.close()
     t2 = time.time()
 
@@ -108,7 +119,7 @@ def on_new_client(conn, addr, selected_file, barrier):
     text += "Conectado con el cliente: " + str(addr) + "\n"
     text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
     print(text)
-    with open('logs/' + date_time + "-log.txt", 'a') as f:
+    with open('logs_servidor/' + date_time + "-log.txt", 'a') as f:
         f.write(text)
 
 
