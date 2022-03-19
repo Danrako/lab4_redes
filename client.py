@@ -34,16 +34,6 @@ def on_create_client(id):
     # 1. La informacion del hash
 
     hash_data = s.recv(SIZE).decode(FORMAT)
-    
-    # 2. La informacion del hash
-    file_data = s.recv(SIZE)
-    # Se saca la codificacion de hash del archivo
-    calculated_hash = hashlib.md5(file_data).hexdigest()
-    print(file_data)
-    print(str(i) + "Archivo: " + file_data.decode(FORMAT))
-
-    print("Hay integridad: ", calculated_hash == hash_data)
-    print("calculated_hash: ", calculated_hash)
     print("hash_data: ", hash_data)
     
     # 3. El archivo recuperado por paquetes
@@ -75,6 +65,17 @@ def on_create_client(id):
                     # data+=input_data.decode(FORMAT)
                     file.write(input_data)
                     send_bytes += len(input_data)
+
+    # Se lee el archivo recibido
+    file = open(filename, "r")
+    data = file.read()
+    data_encoded = data.encode(FORMAT)
+
+    # Se saca la codificacion de hash del archivo
+
+    calculated_hash = hashlib.md5(data_encoded).hexdigest()
+
+    print("Hay integridad: ", calculated_hash == hash_data)
 
     # Enviar mensaje de confirmacion de recibido
     s.send(b"Recibido")

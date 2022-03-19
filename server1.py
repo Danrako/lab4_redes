@@ -65,7 +65,7 @@ def on_new_client(conn, addr, selected_file, barrier):
     t1 = time.time()
     print("Enviando archivo al usuario", addr)
     if selected_file == 1:
-        path = "arch.txt"
+        path = "data/100MB.txt"
     elif selected_file == 2:
         path = "data/250MB.txt"
     else:
