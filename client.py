@@ -19,54 +19,62 @@ def on_create_client(id):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     t1 = time.time()
     # Modificar direccion del servidor
-    host = "192.168.56.1" #"192.168.85.1"  # "192.168.1.2" # server address "localhost", 9879 # Tomas: 192.168.85.1"
+    host = "192.168.85.1" #"192.168.85.1"  # "192.168.1.2" # server address "localhost", 9879 # Tomas: 192.168.85.1"
     port = PORT  # server port
 
     s.connect((host, port))
     print("Conectado")
     i=0
-    print("Numero de bytes recibidos", s.recv(SIZE))
+    n_bytes = s.recv(SIZE)
+    print("Numero de bytes recibidos", n_bytes)
 
     # Numero de los clientes conectados
     filename = "ArchivosRecibidos/Cliente" + str(id) + "-Prueba-" + str(prueba)+".txt"
     # Recibo 4 cosas
-    # 1. El tamaño del archivo
-    sizefile = s.recv(SIZE)
-    file_size = sizefile.decode(FORMAT)
+    # 1. La informacion del hash
+
+    hash_data = s.recv(SIZE).decode(FORMAT)
     
     # 2. La informacion del hash
-    hash_data = s.recv(SIZE)
-    print(str(i) + "HASH recibido: " + hash_data.decode(FORMAT))
+    file_data = s.recv(SIZE)
+    # Se saca la codificacion de hash del archivo
+    calculated_hash = hashlib.md5(file_data).hexdigest()
+    print(file_data)
+    print(str(i) + "Archivo: " + file_data.decode(FORMAT))
+
+    print("Hay integridad: ", calculated_hash == hash_data)
+    print("calculated_hash: ", calculated_hash)
+    print("hash_data: ", hash_data)
     
     # 3. El archivo recuperado por paquetes
     send_bytes = 0
     packets = 0
     file = open(filename, "wb")
-    conexion=False
+    connection = False
     while True:
         try:
             input_data = s.recv(SIZE)
-            packets+=1
-            conexion=True
+            packets += 1
+            connection = True
         except error:
-            print ("Error de lectura")
-            conexion=False
+            print("Error de lectura")
+            connection = False
             break
         else:
             if input_data:
                 # Compatibilidad con Python 3.
                 if input_data.endswith(b"Termino:200"):
                     #data+=input_data.replace(b"Termino:200",b"")
-                    file.write(input_data.replace(b"Termino:200",b""))
+                    file.write(input_data.replace(b"Termino:200", b""))
                     file.close()
-                    send_bytes+=len(input_data.replace(b"Termino:200",b""))
-                    conexion=True
+                    send_bytes += len(input_data.replace(b"Termino:200", b""))
+                    connection = True
                     break
                 else:
                     # Almacenar datos.
                     # data+=input_data.decode(FORMAT)
                     file.write(input_data)
-                    send_bytes+=len(input_data)
+                    send_bytes += len(input_data)
 
     # Enviar mensaje de confirmacion de recibido
     s.send(b"Recibido")
@@ -75,9 +83,9 @@ def on_create_client(id):
     date = datetime.now()
     date_time = date.strftime("%m-%d-%Y-%H-%M-%S")
     text = "---------------------\n"
-    text += "Tamaño del archivo: " + str(file_size) + " Bytes" + "\n"
-    text += "Conectado con el cliente: " + str((host, port)) + "\n"
-    text += "Conexion exitosa: " + str(conexion) + "\n"
+    text += "Tamaño del archivo: " + str(n_bytes) + " Bytes" + "\n"
+    text += "Conectado con el servidor: " + str((host, port)) + "\n"
+    text += "Conexion exitosa: " + str(connection) + "\n"
     text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
     print(text)
     with open('logs_cliente/' + date_time + "-log.txt", 'a') as f:

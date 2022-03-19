@@ -15,7 +15,7 @@ PORT = 12345
 
 def main():
     # Modificar direccion del servidor
-    host = "192.168.56.1" #"192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
+    host = "192.168.85.1" #"192.168.85.1"  # "192.168.1.2" #Server address #Tomas: 192.168.85.1
     port = PORT
 
     # socket.AF_INET define la familia de protocolos IPv4. Socket.SOCK_STREAM define la conexión TCP.
@@ -77,8 +77,8 @@ def on_new_client(conn, addr, selected_file, barrier):
     file = open(path, "r")
     data = file.read()
 
-    # Se saca la codificacion de hash del archivo
     data_encoded = data.encode(FORMAT)
+    # Se saca la codificacion de hash del archivo
     data_hash = hashlib.md5(data_encoded).hexdigest()
     file_size = os.path.getsize(path)
     fz = str(file_size)
