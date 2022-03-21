@@ -19,7 +19,7 @@ def on_create_client(id):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     t1 = time.time()
     # Modificar direccion del servidor
-    host = "192.168.85.1" #"192.168.85.1"  # "192.168.1.2" # server address "localhost", 9879 # Tomas: 192.168.85.1"
+    host = "192.168.121.1" #"192.168.85.1"  # "192.168.1.2" # server address "localhost", 9879 # Tomas: 192.168.85.1"
     port = PORT  # server port
 
     s.connect((host, port))
@@ -75,11 +75,11 @@ def on_create_client(id):
 
     calculated_hash = hashlib.md5(data_encoded).hexdigest()
 
+    print("Hash calculado: ", calculated_hash)
     print("Hay integridad: ", calculated_hash == hash_data)
 
     # Enviar mensaje de confirmacion de recibido
     s.send(b"Recibido")
-
     t2 = time.time()
     date = datetime.now()
     date_time = date.strftime("%m-%d-%Y-%H-%M-%S")
@@ -88,8 +88,9 @@ def on_create_client(id):
     text += "Conectado con el servidor: " + str((host, port)) + "\n"
     text += "Conexion exitosa: " + str(connection) + "\n"
     text += "El tiempo de transferencia es: " + str(t2 - t1) + " ms""\n"
+    text += "La tasa de transferencia es: " + str(float(n_bytes)/(t2-t1)) + " bytes/ms""\n"
     print(text)
-    with open('logs_cliente/' + date_time + "-log.txt", 'a') as f:
+    with open('logs_cliente/' + 'Cliente_' + str(id) + '_' + date_time + "-log.txt", 'a') as f:
         f.write(text)
 
     s.close()
