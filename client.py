@@ -1,3 +1,4 @@
+# BOm dia filho da ...
 # No importar la libreria del socket
 import socket
 import hashlib
