@@ -1,4 +1,4 @@
-# Importar la libreria del socket
+# No importar la libreria del socket
 import socket
 import hashlib
 import threading
